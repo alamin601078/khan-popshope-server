@@ -21,10 +21,26 @@ const client = new MongoClient(url ,{
     }
 })
 
+const userCollection =client.db('khan_popshope').collection("users");
+const productCollection =client.db('khan_popshope').collection("products");
+
+
 const dbConnet= async () =>{
     try{
         client.connect();
         console.log("Database connected successfully");
+
+        app.post("/user", async (req, res) =>{
+            const user = req.body;
+            const query ={ email : user.email};
+            const existingUser = await userCollection.findOne(query)
+            if(existingUser){
+                return res.send({massage : "user already exists"})
+            }
+            const result = await userCollection.insertOne(user)
+            res.send(result)
+        })
+
     }catch (error) {
         console.log(error.name , error.message)
     }
