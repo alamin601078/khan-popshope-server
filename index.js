@@ -4,7 +4,8 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 require('dotenv').config()
 const app = express()
 const port=process.env.PORT || 4000;
-
+const { JsonWebTokenError } = require("jsonwebtoken");
+const jwt = require('jsonwebtoken')
 
 //middleware
 app.use(cors())
@@ -50,6 +51,13 @@ dbConnet();
 //api
 app.get("/",(req , res ) => {
     res.send("server is runnig")
+})
+
+app.post('/authentication', async(req , res) =>{
+    const userEmail = req.body
+    const token = jwt.sign(userEmail,process.env.ACCESS_KEY_TOKEN,{expiresIn: '7d',
+    });
+    res.send({token});
 })
 
 app.listen(port, () => {
