@@ -42,6 +42,11 @@ const dbConnet= async () =>{
             res.send(result)
         })
 
+        app.get("/product", async (req, res) =>{
+            const result = await productCollection.find().toArray()
+            res.send(result)
+        })
+
     }catch (error) {
         console.log(error.name , error.message)
     }
