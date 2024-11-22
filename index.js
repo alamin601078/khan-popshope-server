@@ -47,6 +47,14 @@ const dbConnet= async () =>{
             res.send(result)
         })
 
+        app.get(`/getUserRole/:email` , async (req ,res ) => {
+            // console.log(req.params)
+            const qurary ={email:req.params.email}
+            const result = await userCollection.findOne(qurary);
+            res.send(result)
+      
+         })
+
     }catch (error) {
         console.log(error.name , error.message)
     }
