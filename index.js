@@ -6,6 +6,7 @@ const app = express()
 const port=process.env.PORT || 4000;
 const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken')
+const { ObjectId } = require('mongodb');
 
 //middleware
 app.use(cors())
@@ -47,13 +48,49 @@ const dbConnet= async () =>{
             res.send(result)
         })
 
+        app.get("/allUsers", async (req, res) =>{
+            const result = await userCollection.find().toArray()
+            res.send(result)
+        })
+
         app.get(`/getUserRole/:email` , async (req ,res ) => {
             // console.log(req.params)
             const qurary ={email:req.params.email}
             const result = await userCollection.findOne(qurary);
             res.send(result)
       
-         })
+        })
+
+
+        app.patch(`/users/admin/:id`, async (req ,res) => {
+            const id = req.params.id ;
+            const filter = { _id : new ObjectId(id) };
+            const updatedDoc = {
+              $set : {
+                role: 'seller'
+              }
+            }
+            const result = await userCollection.updateOne(filter,updatedDoc);
+            res.send(result)
+        })
+
+
+        app.delete('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log(id)
+            const query = { _id: new ObjectId(id) }
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+        app.delete('/product/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log(id)
+            const query = { _id: new ObjectId(id) }
+            const result = await productCollection.deleteOne(query);
+            res.send(result);
+        })
 
     }catch (error) {
         console.log(error.name , error.message)
