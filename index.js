@@ -7,6 +7,8 @@ const port=process.env.PORT || 4000;
 const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken')
 const { ObjectId } = require('mongodb');
+// const { new } = require('mongodb');
+
 
 //middleware
 app.use(cors())
@@ -44,8 +46,30 @@ const dbConnet= async () =>{
         })
 
         app.get("/product", async (req, res) =>{
-            const result = await productCollection.find().toArray()
-            res.send(result)
+            const {title,sort,category,brand} = req.query;
+            const quary= {};
+            if(title){
+                quary.title = { $regex: title,$options: "i"};
+            }
+            if(category){
+                quary.category = {$regex: title, $options: "i"};
+            }
+            if(brand){
+                quary.brand = brand;
+            }
+            const sortOption = sort ==="asc" ? 1 : -1;
+
+            const result = await productCollection.find(quary).sort({price:sortOption}).toArray();
+
+            const totalProducts = await productCollection.countDocuments(quary);
+
+            const productInfo = await productCollection.find({},{projection:{category:1,brand:1}}).toArray();
+            
+            const categories = [...new Set(productInfo.map((p) => p.category))]
+
+            const brands = [...new Set(productInfo.map((p) => p.brand))]
+
+            res.send({result,totalProducts,brands,categories})
         })
 
         app.get("/allUsers", async (req, res) =>{
