@@ -11,15 +11,22 @@ const { ObjectId } = require('mongodb');
 
 
 //middleware
-app.use(cors())
+app.use(cors({
+    origin: ['https://khan-popshope-server.vercel.app',
+        'http://localhost:5173'
+    ]
+    // origin: 'http://localhost:5173'
+}))
 app.use(express.json())
 
 const verifyjwt = (req,res,next) => {
-    const authentication = req.headers.authentication;
+    const authentication = req.headers.authorization;
+
     if(!authentication){
-        return res.send({message: "Invalid Token"})
+        return res.send({message: "Invalid Token"})  
     }
-    const token = authentication.split("")[1];
+    const token = authentication.split(" ")[1];
+    console.log(token)
     jwt.verify(token,process.env.ACCESS_KEY_TOKEN,(err, decoded) => {
         if(err){
             return res.send({message: "Invalid Token"})
@@ -44,9 +51,9 @@ const userCollection =client.db('khan_popshope').collection("users");
 const productCollection =client.db('khan_popshope').collection("products");
 
 
-const dbConnet= async () =>{
+const dbConnect= async () =>{
     try{
-        client.connect();
+        await client.connect();
         console.log("Database connected successfully");
 
         app.post("/user", async (req, res) =>{
@@ -61,7 +68,7 @@ const dbConnet= async () =>{
         })
 
 
-        app.post("/seller/addproduct", verifyjwt, async (req, res) =>{
+        app.post("/seller/addproduct",  async (req, res) =>{
             const product = req.body;
 
             const result = await productCollection.insertOne(product)
@@ -163,7 +170,7 @@ const dbConnet= async () =>{
     }
 }
 
-dbConnet();
+dbConnect();
 //api
 app.get("/",(req , res ) => {
     res.send("server is runnig")
