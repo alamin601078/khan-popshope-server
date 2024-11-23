@@ -14,6 +14,21 @@ const { ObjectId } = require('mongodb');
 app.use(cors())
 app.use(express.json())
 
+const verifyjwt = (req,res,next) => {
+    const authentication = req.headers.authentication;
+    if(!authentication){
+        return res.send({message: "Invalid Token"})
+    }
+    const token = authentication.split("")[1];
+    jwt.verify(token,process.env.ACCESS_KEY_TOKEN,(err, decoded) => {
+        if(err){
+            return res.send({message: "Invalid Token"})
+        }
+        req.decoded = decoded ;
+        next();
+    });
+};
+
 //mongodb
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.j44byal.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 
@@ -44,6 +59,15 @@ const dbConnet= async () =>{
             const result = await userCollection.insertOne(user)
             res.send(result)
         })
+
+
+        app.post("/seller/addproduct", verifyjwt, async (req, res) =>{
+            const product = req.body;
+
+            const result = await productCollection.insertOne(product)
+            res.send(result)
+        })
+
 
         app.get("/product", async (req, res) =>{
             const {title,sort,category,brand} = req.query;
