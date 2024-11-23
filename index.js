@@ -98,6 +98,24 @@ const dbConnet= async () =>{
             res.send(result)
         })
 
+        
+
+        app.patch(`/wishlist/add`,async (req ,res) => {
+            const {userEmail,productId}= req.body;
+            const result = await userCollection.updateOne({email:userEmail},{$addToSet: {wishlist: new ObjectId(String(productId))}});
+            res.send(result)
+        })
+
+
+        app.get(`/wishlist/:userId`,async (req,res) =>{
+            const qurary ={email:req.params.userId}
+            const user = await userCollection.findOne(qurary)
+
+            const wishlist = await productCollection.find({_id: {$in: user.wishlist || []}}).toArray();
+            // console.log(wishlist)
+            res.send(wishlist);
+        })
+
 
         app.delete('/user/:id', async (req, res) => {
             const id = req.params.id;
