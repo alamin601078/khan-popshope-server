@@ -1,49 +1,54 @@
 const express = require("express")
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
-require('dotenv').config()
+require('dotenv').config();
 const app = express()
 const port=process.env.PORT || 4000;
-const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken')
 const { ObjectId } = require('mongodb');
-// const { new } = require('mongodb');
+
 
 
 //middleware
-app.use(cors({
-    origin: ['https://khan-popshope-server.vercel.app',
-        'http://localhost:5173'
-    ]
-    // origin: 'http://localhost:5173'
-}))
+// app.use(cors({
+//     origin: ['https://khan-popshope-client.vercel.app',
+//         'http://localhost:5173'
+//     ]
+//     // origin: 'http://localhost:5173'
+// }))
+const corsOptions = {
+    origin: ['https://khan-popshope-client.vercel.app','http://localhost:5173' ], // Allow only this origin
+    optionsSuccessStatus: 200
+  };
+  app.use(cors(corsOptions));
 app.use(express.json())
 
-const verifyjwt = (req,res,next) => {
-    const authentication = req.headers.authorization;
+// const verifyjwt = (req,res,next) => {
+//     const authentication = req.headers.authorization;
 
-    if(!authentication){
-        return res.send({message: "Invalid Token"})  
-    }
-    const token = authentication.split(" ")[1];
-    console.log(token)
-    jwt.verify(token,process.env.ACCESS_KEY_TOKEN,(err, decoded) => {
-        if(err){
-            return res.send({message: "Invalid Token"})
-        }
-        req.decoded = decoded ;
-        next();
-    });
-};
+//     if(!authentication){
+//         return res.send({message: "Invalid Token"})  
+//     }
+//     const token = authentication.split(" ")[1];
+//     console.log(token)
+//     jwt.verify(token,process.env.ACCESS_KEY_TOKEN,(err, decoded) => {
+//         if(err){
+//             return res.send({message: "Invalid Token"})
+//         }
+//         req.decoded = decoded ;
+//         next();
+//     });
+// };
 
 //mongodb
-const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.j44byal.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+const url = `mongodb://localhost:27017`
+// const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.j44byal.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 
 const client = new MongoClient(url ,{
     serverApi:{
         version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors:true
+        // strict: true,
+        // deprecationErrors:true
     }
 })
 
@@ -53,7 +58,7 @@ const productCollection =client.db('khan_popshope').collection("products");
 
 const dbConnect= async () =>{
     try{
-        await client.connect();
+        // await client.connect();
         console.log("Database connected successfully");
 
         app.post("/user", async (req, res) =>{
@@ -108,7 +113,7 @@ const dbConnect= async () =>{
             res.send(result)
         })
 
-        app.get(`/getUserRole/:email` , async (req ,res ) => {
+        app.get(`/getUserRole/:email` ,  async (req ,res ) => {
             // console.log(req.params)
             const qurary ={email:req.params.email}
             const result = await userCollection.findOne(qurary);
@@ -117,7 +122,7 @@ const dbConnect= async () =>{
         })
 
 
-        app.patch(`/users/admin/:id`, async (req ,res) => {
+        app.patch(`/users/admin/:id`, async (req ,res ) => {
             const id = req.params.id ;
             const filter = { _id : new ObjectId(id) };
             const updatedDoc = {
@@ -138,14 +143,22 @@ const dbConnect= async () =>{
         })
 
 
-        app.get(`/wishlist/:userId`,async (req,res) =>{
-            const qurary ={email:req.params.userId}
-            const user = await userCollection.findOne(qurary)
+        app.get(`/wishlist/:userId`, async (req, res) => {
+            try {
+            const query = { email: req.params.userId };
+            const user = await userCollection.findOne(query);
 
-            const wishlist = await productCollection.find({_id: {$in: user.wishlist || []}}).toArray();
-            // console.log(wishlist)
+            if (!user) {
+                return res.status(404).send({ message: "User not found" });
+            }
+
+            const wishlist = await productCollection.find({ _id: { $in: user.wishlist || [] } }).toArray();
             res.send(wishlist);
-        })
+            } catch (error) {
+            console.error(error);
+            res.status(500).send({ message: "Internal Server Error" });
+            }
+        });
 
 
         app.delete('/user/:id', async (req, res) => {
