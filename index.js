@@ -41,8 +41,8 @@ app.use(express.json())
 // };
 
 //mongodb
-const url = `mongodb://localhost:27017`
-// const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.j44byal.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+// const url = `mongodb://localhost:27017`
+const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.j44byal.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 
 const client = new MongoClient(url ,{
     serverApi:{
